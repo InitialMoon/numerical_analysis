@@ -37,3 +37,5 @@
 *.vcxproj
 *.filters
 *.user
+/solve_equation/x64/Debug
+*.png
