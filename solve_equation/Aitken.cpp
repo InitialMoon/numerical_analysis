@@ -1,8 +1,9 @@
-#include <iostream>
+#include "constFeild.h"
 #include <cmath>
+#include <iostream>
+
 using namespace std;
 
-const float e = 2.718281828; // 对数常量
 double eps = 5e-6;// 默认误差范围
 double ans = 0;
 int interNum = 0; // 迭代次数
@@ -20,7 +21,7 @@ double interator(double xn) {
 	return xn1;
 }
 
-int main() {
+int Aitken() {
 	double x0 = 0.5; //初值
 	double xn = 0.6; // 范围最末位置
 	int n = 0; // 存储用户输入精度
