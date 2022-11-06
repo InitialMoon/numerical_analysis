@@ -82,7 +82,7 @@ int main() {
 			}
 			if (type == 5) {
 				x1 = dStringInterator(xn, x1, interNum);
-				xn = dStringInterator(xn, x1, interNum);
+				xn = dStringInterator(x1, xn, interNum);
 			}
 		}
 	}
