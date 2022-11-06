@@ -1,2 +1,2 @@
 #pragma once
-int Aitken();
+double AitkenInterator(double xn, int& interNum);

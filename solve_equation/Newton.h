@@ -1,2 +1,2 @@
 #pragma once
-int Newton();
+double NewtonInterator(double xn, int& interNum);
