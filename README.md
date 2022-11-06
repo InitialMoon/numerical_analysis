@@ -38,14 +38,14 @@ double ans = 0;
 int interNum = 0; // 迭代次数
 
 // 迭代函数
-double F(double x) {
+double AitkenF(double x) {
 	return pow(e, -x);
 }
 
-double interator(double xn) {
+double Aitkeninterator(double xn) {
 	interNum++;
-	double yn = F(xn);
-	double zn = F(yn);
+	double yn = AitkenF(xn);
+	double zn = AitkenF(yn);
 	double xn1 = (zn * xn - yn * yn) / (zn + xn - 2 * yn);
 	return xn1;
 }
@@ -62,8 +62,8 @@ int main() {
 	cin >> n;
 	eps = 0.5 * pow(10, -n);
 	while (abs(xn - x0) > eps) {
-		xn = interator(x0);
-		x0 = interator(xn);
+		xn = AitkenInterator(x0);
+		x0 = AitkenInterator(xn);
 	}
 	cout.precision(n);
 	cout << "该方程的解是：" << xn << endl;
@@ -148,7 +148,7 @@ int Newton() {
 
 结果正确
 
-### 对比与总结
+#### 对比与总结
 
 下面对这两种迭代方法进行简单的对比，在这个程序中，我将两种方程的解法合并在了同一个接口下面，通过选择不同的编号使用不同的方法进行迭代计算
 
@@ -188,11 +188,13 @@ int Newton() {
 
 所以就想老师上课所说的那样，这两种迭代方式没有谁绝对的好谁绝对的坏，重要的是看使用的场景，而在一般情况下，显然我们更希望两种情况都能应对，也就是说只要我们将两者进行结合就好，在离初值比较远的时候，就使用大范围收敛的迭代公式，而在精度达到一定范围了之后，再换用另一种迭代公式就好了，我们可以将两种迭代公式进行对接，实现更加健壮稳定高效求解算法。
 
-### 改进
+#### 改进
 
 根据上面分析得出的结论，牛顿切线法是一个小范围收敛的迭代法，艾特肯法是一个大范围收敛的迭代法，因此，我将上面的程序进行了进一步的封装，并新增了第三个接口”牛顿-艾特肯混合版”这个新的接口支持在迭代过程中自行检测目前的收敛位置，并根据距离真值附近的距离进行选择，当离真值远（>0.1)时选择艾特肯法，而小于0.1后选择牛顿法，这样就可以实现取长补短的适应性更强的迭代计算了
 
 代码实现
+
+这里只列出封装后的主函数，迭代函数在上面两段代码中有罗列，不再重复
 
 ```c++
 #include <iostream>
@@ -268,14 +270,69 @@ int main() {
 }
 ```
 
-##### 1.3 混合法
+#### 1.3 魔改混合法
 
 | 实验次数 | 初值      | 精度要求（小数点后n位） | 解                | 迭代次数 |
 | -------- | --------- | ----------------------- | ----------------- | -------- |
 | 1        | 100000000 | 15                      | 0.567143290444445 | 6        |
 
-由实验结果可以看到，这种方式确实非常的强大，实现了对初值要求极不严格的情况下，高精度快速迭代到目标解
+由实验结果可以看到，这种方式确实非常的强大，实现了对初值要求极不严格的情况下，高精度快速迭代到目标精度的解
+
+#### 1.4 弦解法
+
+例题方程同上，下面两段代码封装至上面的主函数框架中，值多加了两个分支
+
+##### 1.4.1 单点弦截法
+
+核心代码如下
+
+```C++
+// 迭代函数
+double StringF(double x) {
+	double res = 0;
+	res = x * pow(e, x) - 1;
+	return res;
+}
+
+// 单点弦解法
+double sStringInterator(double xn, double x0, int& interNum) {
+	interNum++;
+	xn = (x0 * StringF(xn) - xn * StringF(x0)) / (StringF(xn) - StringF(x0));
+	return xn;
+}
+```
+
+##### 1.4.2 双点弦截法
+
+核心代码如下
+
+```c++
+// 双点弦解法
+double dStringInterator(double xn, double xn_1, int& interNum) {
+	interNum++;
+	xn = (StringF(xn) * xn_1 - StringF(xn_1) * xn) / (StringF(xn) - StringF(xn_1));
+	return xn;
+}
+```
+
+##### 调用模块
+
+```C++
+double x1 = x0;
+while (abs(xn - x1) > eps) {
+    if (type == 4) {
+        x1 = sStringInterator(xn, x0, interNum);
+        xn = sStringInterator(x1, x0, interNum);
+    }
+    if (type == 5) {
+        x1 = dStringInterator(xn, x1, interNum);
+        xn = dStringInterator(xn, x1, interNum);
+    }
+}
+```
+
+
 
 ### 二、方程组的迭代解法
 
-#### 2.1
+#### 2.1 
