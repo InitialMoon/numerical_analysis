@@ -39,3 +39,5 @@
 *.user
 /solve_equation/x64/Debug
 *.png
+/solve_equations/.vs/solve_equations
+/solve_equations/x64/Debug
