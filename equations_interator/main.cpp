@@ -37,6 +37,10 @@ void input() {
 		}
 		cin >> B[i];
 	}
+	cout << "请输入期望的误差限：";
+	int t = 0;
+	cin >> t;
+	eps = pow(10, -t);
 }
 
 void select() {
@@ -69,12 +73,12 @@ int main() {
 void Jacobi() {
 	InteratorNum++;
 	for (int i = 0; i < n; i++) {
+		a[i] = F[i][n];
 		for (int j = 0; j < n; j++) {
 			if (i != j) {
 				a[i] += F[i][j] * b[j];
 			}
 		}
-		a[i] += F[i][n - 1];
 		e = abs(a[i] - b[i]);
 	}
 }
@@ -82,14 +86,18 @@ void Jacobi() {
 void Guess_Seidel() {
 	InteratorNum++;
 	for (int i = 0; i < n; i++) {
-		for (int j = 0; j < n; j++) {
+		a[i] = F[i][n];
+		for (int j = 0; j < i; j++) {
 			if (i != j) {
-				a[i] += F[i][j] * b[i];
+				a[i] += F[i][j] * a[j];
 			}
 		}
-		a[i] += F[i][n];
+		for (int j = i; j < n; j++) {
+			if (i != j) {
+				a[i] += F[i][j] * b[j];
+			}
+		}
 		e = abs(a[i] - b[i]);
-		swap(a, b);
 	}
 }
 
@@ -102,11 +110,11 @@ void solve() {
 				F[i][j] = A[i][j] / aa;
 			}
 		}
-		F[i][n] = B[i] / aa;
+		F[i][n] = B[i] / -aa;
 	}
 	// 开始迭代计算
 	// e是计算过程中的最大误差，和上次迭代值之间的，这里只是写一个很大的数防止一开始就坏掉
-	while (InteratorNum < 10) {
+	while (eps < e) {
 		if (methodType == 1) {
 			Jacobi();
 		}
