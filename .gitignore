@@ -41,3 +41,5 @@
 *.png
 /solve_equations/.vs/solve_equations
 /solve_equations/x64/Debug
+/equations_interator/.vs/equations_interator
+/equations_interator/x64/Debug
