@@ -716,15 +716,178 @@ void mainEliminate() {
 
 ### 三、线性方程组的迭代解法
 
+使用同一道例题好进行方法的对比
+
+例题如下：
+
+>$$\begin{cases}
+>	20x_1  +20x_2 + 3x_3 = 24\\ 1x_1 +8x_2 +x_3 = 12 \\ 2x_1 - 3x_2 + 15x_3 = 30\end{cases}$$
+
+两种方法主题框架相同，值有代入时使用的是已有k+1次的还是过去k次的差别，因此合并为同一个main函数中实现，主函数如下
+
+```c++
+#include <iostream>
+#include <algorithm>
+using namespace std;
+const int MAXSIZE = 100;
+int n = 0;
+int InteratorNum = 0;// 记录迭代次数
+double eps = 1e-5;// 误差限
+double e = 1e2; // 计算过程中不断变化的用于测量误差的数
+int t = 0;
+int methodType = 0;
+double A[MAXSIZE][MAXSIZE];
+double B[MAXSIZE];
+// 雅克比方法需要使用两个，高斯赛德尔法只用一个
+double X0[MAXSIZE];// 迭代序列存放单元，不会保留，会不断替换
+double X1[MAXSIZE];// 迭代序列存放单元，不会保留，会不断替换
+double F[MAXSIZE][MAXSIZE]; // 迭代公式系数存放，第一个系数是常数项，后面是余下的系数，顺序，会跳过自己这一项,反一下，最后处理常数
+double* a = X0;
+double* b = X1;
+void Jacobi();
+void Guess_Seidel();
+void solve();
+void output();
+
+void init() {
+	for (int i = 0; i < n; i++) {
+		X0[i] = 0;
+		X1[i] = 0;
+	}
+}
+
+void input() {
+	cout << "其输入方程组的秩:";
+	cin >> n;
+	cout << "请输入方程组的增广矩阵:" << endl;
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			cin >> A[i][j];
+		}
+		cin >> B[i];
+	}
+	cout << "请输入期望的误差限：";
+	cin >> t;
+	eps = pow(10, -t);
+}
+
+void select() {
+	cout << "请选择你想使用的方法" << endl;
+	cout << "1.雅克比迭代法" << endl;
+	cout << "2.高斯赛德尔迭代法" << endl;
+
+	cin >> methodType;
+
+	switch (methodType) {
+	case 1:
+		break;
+	case 2:
+		break;
+	default:
+		break;
+	}
+}
+int main() {
+	init();
+	while (methodType <= 0 || methodType > 2) { // 选项合法性检测
+		select();
+	}
+	input();
+	solve();
+	output();
+}
+
+void solve() {
+	// 计算迭代公式的系数
+	for (int i = 0; i < n; i++) {
+		double aa =  - A[i][i];
+		for (int j = 0; j < n; j++) {
+			if (i != j) {
+				F[i][j] = A[i][j] / aa;
+			}
+		}
+		F[i][n] = B[i] / -aa;
+	}
+	// 开始迭代计算
+	// e是计算过程中的最大误差，和上次迭代值之间的，这里只是写一个很大的数防止一开始就坏掉
+	while (eps < e) {
+		if (methodType == 1) {
+			Jacobi();
+		}
+		else {
+			Guess_Seidel();
+		}
+		swap(a, b);
+	}
+}
+
+void output() {
+	cout.precision(t);
+	cout << "方程的解是：" << endl;
+	for (int i = 0; i < n; i++) {
+		cout << "x" << i + 1 << " = " << X0[i] << endl;
+	}
+	cout << "迭代次数：" << InteratorNum << endl;
+}
+```
+
 #### 3.1 雅克比迭代法
 
+```C++
+// Jacobi迭代法
+void Jacobi() {
+	InteratorNum++;
+	for (int i = 0; i < n; i++) {
+		a[i] = F[i][n];
+		for (int j = 0; j < n; j++) {
+			if (i != j) {
+				a[i] += F[i][j] * b[j];
+			}
+		}
+		e = abs(a[i] - b[i]);
+	}
+}
+```
 
+输入对应的参数，运行结果如下：
 
-#### 3.2 高斯赛德尔迭代法
+![image-20221110230709367](image-20221110230709367.png)
+
+#### 3.2 高斯—赛德尔迭代法
+
+```C++
+void Guess_Seidel() {
+	InteratorNum++;
+	for (int i = 0; i < n; i++) {
+		a[i] = F[i][n];
+		for (int j = 0; j < i; j++) {
+			if (i != j) {
+				a[i] += F[i][j] * a[j];
+			}
+		}
+		for (int j = i; j < n; j++) {
+			if (i != j) {
+				a[i] += F[i][j] * b[j];
+			}
+		}
+		e = abs(a[i] - b[i]);
+	}
+}
+```
+
+输入对应的参数，运行结果如下：
+
+![image-20221110230754768](image-20221110230754768.png)
+
+#### 实验结论
+
+首先，结果与课件中的结果相同实验结果与理论相符，除此之外，我特意加入了误差限要求入口，以作显著的动态对比，时间原因，我这里就不列表格呈现了（有兴趣读者的话可以直接去运行程序亲自看看结果，相应的程序输入我放在了input文件夹下面）可以看到，高斯赛德尔迭代法确实比简单的雅克比迭代法的收敛速度要快，与理论相符，但两者都可以较为快速的解出所需的高精度的方程组的解，并且随精度提高的过程，迭代次数增速并不很快。
 
 ### 四、插值法
 
 #### 4.1 拉格朗日插值法
 
-#### 4.2 
+
+
+#### 4.2 牛顿差商法
 
