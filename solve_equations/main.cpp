@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cmath>
+#include <algorithm>
 #define MAXSIZE 100
 using namespace std;
 
@@ -9,6 +10,8 @@ double L[MAXSIZE][MAXSIZE]; // 同上L矩阵
 double B[MAXSIZE]; // 右边的常数项向量
 double Z[MAXSIZE]; // 化为上三角矩阵后的系数向量
 double X[MAXSIZE]; // 解的存放单元
+int mainsqe[MAXSIZE];
+int maxElement[MAXSIZE]; // 记录主元素法的顺序
 int n = 0;
 int methodType = 0;
 void(*Eliminate)() = NULL; // 真正调用的消元过程
@@ -22,14 +25,23 @@ void GEliminate(); // 高斯消元过程
 void SqEliminate(); // 平方根法消元过程
 void mainEliminate(); // 主元素法
 void output();
+void init();
 
 int main() {
+	init();
 	while (methodType <= 0 || methodType > 4) { // 选项合法性检测
 		select();
 	}
 	input();
 	solve();
 	output();
+}
+
+void init() {
+	// 初始化循序公用部分
+	for (int i = 0; i < MAXSIZE; i++) {
+		maxElement[i] = i;
+	}
 }
 
 void input() {
@@ -49,7 +61,7 @@ void output() {
 
 	cout << "方程组的解如下：" << endl;
 	for (int i = 0; i < n; i++) {
-		cout << "x" << i + 1 << " = " << X[i] << endl;
+		cout << "x" << maxElement[i] + 1 << " = " << X[maxElement[i]] << endl;
 	}
 	cout << endl;
 
@@ -73,7 +85,7 @@ void output() {
 
 	cout << 'Z' << endl;
 	for (int i = 0; i < n; i++) {
-		cout << Z[i] << " ";
+		cout << Z[maxElement[i]] << " ";
 	}
 	cout << endl;
 }
@@ -186,9 +198,79 @@ void CEliminate() {
 }
 
 void SqEliminate() {
+	for (int i = 0; i < n; i++) {
+		// Lii 计算
+		L[i][i] = A[i][i];
+		for (int k = 0; k < i; k++) {
+			L[i][i] -= L[i][k] * L[i][k];
+		}
+		L[i][i] = sqrt(L[i][i]);
+		U[i][i] = L[i][i];
 
+		// Uij计算
+		for (int j = i + 1; j < n; j++) {
+			U[i][j] = A[i][j];
+			for (int k = 0; k < i; k++) {
+				U[i][j] -= L[i][k] * U[k][j];
+			}
+			U[i][j] /= L[i][i];
+		}
+
+		// 将计算的U值赋给这一列的所有l
+		for (int k = i; k < n; k++) {
+			L[k][i] = U[i][k];
+		}
+
+		// Zi计算
+		Z[i] = B[i];
+		for (int k = 0; k < i; k++) {
+			Z[i] -= L[i][k] * Z[k];
+		}
+		Z[i] /= L[i][i];
+	}
 }
 
 void mainEliminate() {
+	// 寻找主元素
+	for (int i = 0; i < n; i++) {
+		int maxEle = 0;
+		for (int j = 1; j < n; j++) {
+			if (A[j][i] > A[maxEle][i]) {
+				maxEle = j;
+			}
+		}
 
+		for (int k = 0; k < n; k++) {
+			swap(A[i][k], A[maxEle][k]);
+		}
+		swap(B[i], B[maxEle]);
+		swap(maxElement[i], maxElement[maxEle]);
+	}
+
+	for (int i = 0; i < n; i++) {
+		// Lij计算
+		L[i][i] = 1;
+
+		for (int j = 0; j < i; j++) {
+			L[i][j] = A[i][j];
+			for (int k = 0; k < j; k++) {
+				L[i][j] -= L[i][k] * U[k][j];
+			}
+			L[i][j] /= U[j][j];
+		}
+
+		// Uij计算
+		for (int j = i; j < n; j++) {
+			U[i][j] = A[i][j];
+			for (int k = 0; k < i; k++) {
+				U[i][j] -= L[i][k] * U[k][j];
+			}
+		}
+
+		// Zi计算
+		Z[i] = B[i];
+		for (int k = 0; k < i; k++) {
+			Z[i] -= L[i][k] * Z[k];
+		}
+	}
 }
